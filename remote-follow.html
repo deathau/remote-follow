@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Remote Follow</title>
+</head>
+<body>
+    <pre id="test">test</pre>
+    <script>
+        const pre = document.getElementById('test')
+        
+        const SUBSCRIBE_LINK_REL = 'http://ostatus.org/schema/1.0/subscribe'
+        const AVATAR_LINK_REL = 'http://webfinger.net/rel/avatar'
+
+        const urlParams = new URLSearchParams(window.location.search)
+        let handle = urlParams.get('handle').trim().replace(/^@/,'')
+        let id = urlParams.get('id')
+
+        if(!handle && !id) {
+            // display an error. one of these is required.
+        }
+        
+        if(handle && !id){
+            const split = handle.split('@')
+            if(split.length == 2) {
+                const resource = `acct:${handle}`
+                const domain = split[1]
+                
+                // look up remote user via webfinger
+                const url = `https://${domain}/.well-known/webfinger?resource=${resource}`
+                fetch(url, {headers: {
+                    'Accept': 'application/json'
+                }}).then(async result => {
+                    const json = await result.json()
+                    console.log(json)
+                    id = json.links.find(link => link.rel && link.rel == "self" && link.type == "application/activity+json")?.href
+                    pre.innerText = handle + '\n' + id
+                })
+            }
+            else {
+                // error: handle doesn't have an `@`
+            }
+        }
+
+
+
+
+
+        pre.innerText = handle + '\n' + id
+
+
+
+        // class FediSocial extends HTMLElement {
+        // constructor() {
+        //     // Always call super first in constructor
+        //     super();
+        // }
+
+        // connectedCallback() {
+        //     const data = JSON.parse(localStorage.getItem('fedi-social') || '{}')
+
+        //     let img;
+        //     if(data.avatar) {
+        //     img = document.createElement('img')
+        //     img.src = data.avatar || "https://upload.wikimedia.org/wikipedia/commons/9/93/Fediverse_logo_proposal.svg"
+        //     }
+        //     else {
+        //     img = document.createElement('i')
+        //     img.classList.add('omg-icon', 'omg-fediverse')
+        //     }
+
+        //     const summary = document.createElement('summary')
+        //     summary.appendChild(img)
+
+        //     const details = document.createElement('details')
+        //     details.appendChild(summary)
+
+        //     // popup
+        //     const div = document.createElement('div')
+        //     div.classList.add('card', 'popover')
+
+        //     if(data.id) {
+        //     //logout
+        //     const p = document.createElement('p')
+        //     p.innerHTML = `Hey again, ${data.name} 👋`
+        //     div.appendChild(p)
+
+        //     const button = document.createElement('button')
+        //     button.innerText = "Forget me"
+        //     button.addEventListener('click', ev => { localStorage.clear(); window.location.reload() })
+        //     div.appendChild(button)
+
+        //     }
+        //     else {
+        //     const p = document.createElement('p')
+        //     p.innerHTML = "Hey 👋, <br />please enter your fediverse / mastodon handle below. "
+
+        //     const form = document.createElement('form')
+        //     form.addEventListener('submit', this.login)
+
+        //     const input = document.createElement('input')
+        //     input.type = 'text'
+        //     input.name = 'handle'
+        //     input.placeholder = '@user@domain.social'
+        //     form.appendChild(input)
+
+        //     const button = document.createElement('input')
+        //     button.type = 'submit'
+        //     button.value = 'Submit'
+        //     form.appendChild(button)
+            
+        //     div.appendChild(p)
+        //     div.appendChild(form)
+        //     }
+
+        //     details.appendChild(div)
+        //     this.appendChild(details)
+        // }
+
+        // login(ev) {
+        //     ev.preventDefault()
+        //     const input = this.elements['handle'].value
+        //     let handle = input.trim().replace(/^@/,'')
+        //     const split = handle.split('@')
+        //     if(split.length == 2) {
+        //     const resource = `acct:${handle}`
+        //     const domain = split[1]
+            
+        //     // look up remote user via webfinger
+        //     const url = `https://${domain}/.well-known/webfinger?resource=${resource}`
+        //     return fetch(url, {headers: {
+        //         'Accept': 'application/json'
+        //     }}).then(async result => {
+        //         const json = await result.json()
+        //         console.log(json)
+                
+        //         const template = json.links.find(link => link.rel && link.rel == SUBSCRIBE_LINK_REL)?.template
+        //         const avatar = json.links.find(link => link.rel && link.rel == AVATAR_LINK_REL)?.href
+        //         const id = json.links.find(link => link.rel && link.rel == "self" && link.type == "application/activity+json")?.href
+
+        //         const data = { id, template, avatar, name: input }
+        //         localStorage.setItem('fedi-social', JSON.stringify(data))
+
+        //         if(template && template.includes('{uri}')) {
+        //             let a = document.createElement('a')
+        //             a.href = template.replace('{uri}', MY_ID)
+        //             a.target = "_blank"
+        //             ev.target.appendChild(a)
+        //             a.click()
+        //         }
+
+        //         window.location.reload()
+        //     })
+        //     .catch(e => {
+        //         console.error(e)
+        //         this.parentElement.querySelector('p').innerHTML = `Sorry, we couldn't find details for ${input}.\n\nTo interact with me, try searching for ${MY_HANDLE} on ${domain} (or in your fediverse client of choice)`
+        //         return null
+        //     })
+        //     }
+        //     else {
+        //     this.parentElement.querySelector('p').innerHTML = `Please enter your fediverse address in @user@domain.social format`
+        //     }
+        // }
+
+        // clicked(ev) {
+        //     ev.preventDefault()
+        //     console.log("Ow! You clicked me!")
+        // }
+        // }
+
+        // customElements.define('fedi-remote-follow', FediRemoteFollow)
+    </script>
+</body>
+</html>

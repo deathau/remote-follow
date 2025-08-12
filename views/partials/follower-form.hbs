@@ -1,0 +1,14 @@
+<section class='card'>
+  <form method='post'>
+    <label for='idOrHandle'>
+      <p>Please enter your fediverse handle or id:</p>
+    </label>
+    <input type='text' name='idOrHandle' value='{{{follower.idOrHandle}}}'>
+    <input type='hidden' name='person' value='{{json person}}'>
+    <input type='submit' value='Submit'>
+    {{#if follower.error}}
+      <p>Apologies, but there seems to have an issue attempting to retrieve data for {{follower.idOrHandle}}</p>
+      <p class='error'>{{{follower.error}}}</p>
+    {{/if}}
+  </form>
+</section>

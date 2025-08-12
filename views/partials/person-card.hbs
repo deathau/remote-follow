@@ -1,0 +1,20 @@
+<a class='inherit' href='{{{person.url}}}' target='_blank'>
+  <section class='card follow'>
+    {{#if person.avatar}}
+    <img src='{{person.avatar}}' alt='@{{person.handle}}'>
+    {{/if}}
+    <h2>{{person.name}}</h2>
+    {{#if person.handle}}
+      <h6>@{{person.handle}}</h6>
+    {{/if}}
+    {{#if person.id}}
+      <h6>({{person.id}})</h6>
+    {{/if}}
+    {{#if person.error}}
+      <p style='clear:both'>An error occurred retrieving public profile data:</p>
+      <p class='error'>{{person.error}}</p>
+    {{else}}
+      <p class='summary'>{{{person.summary}}}</p>
+    {{/if}}
+  </section>
+</a>

@@ -1,0 +1,22 @@
+{{#if follower}}
+  {{#if follower.error}}
+    <div>
+    <p>You would like to follow:</p>
+  {{else}}
+    <div class="top">
+      <form method='post'>
+        <p>You:
+          <input type='hidden' name='person' value='{{json person}}'>
+          <input type='hidden' name='logout'>
+          <input type='submit' value='Forget me' class='logout-button'>
+        </p>
+      </form>
+      {{> follower-card}}
+    </div>
+    <div>
+      <p>Would like to follow:</p>
+  {{/if}}
+{{else}}
+  <div>
+    <p>You would like to follow:</p>
+{{/if}}

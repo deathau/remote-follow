@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="color-scheme" content="light dark">
+  <title>Remote follow</title>
+  <style>
+    html { background-color: Canvas; font-family: sans-serif; }
+    body { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+    main {
+      max-width: 32rem;
+      margin:auto;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .top {
+      /*margin-bottom: auto;*/
+    }
+    .card {
+      border-radius: 1rem;
+      border: 1px solid ButtonBorder;
+      padding: 1rem;
+      min-height: 5rem;
+
+      img{
+        max-width: 5rem;
+        max-height: 5rem;
+        border-radius: 50%;
+        float: left;
+        margin-right: 1rem;
+      }
+
+      h2 {
+        margin-bottom: 0;
+      }
+      h6 {
+        color: GrayText;
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+      .summary{
+        color: GrayText;
+      }
+    }
+    code {
+      font-family: monospace;
+      font-size: 1rem;
+      padding: 0.5em;
+      border: 1px solid ButtonBorder;
+      background-color: ButtonFace;
+      color: ButtonText;
+      border-radius: 0.5em;
+      display: inline-block;
+      margin: 0.25em;
+      cursor: default;
+    }
+    .follow-button{
+      max-width: 100%;
+      margin:auto;
+      padding: 1rem;
+      border: 1px solid ButtonBorder;
+      display: block;
+      text-align: center;
+      border-radius: 1rem;
+      background-color: AccentColor;
+      color: AccentColorText;
+      font-size: 2rem;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .inherit {
+      color: inherit;
+      text-decoration: inherit;
+    }
+    .logout-button {
+      float: inline-end;
+    }
+  </style>
+</head>
+<body>
+  {{{ body }}}
+</body>
+</html>

@@ -1,0 +1,42 @@
+<main>
+    {{> form-you }}
+    {{> person-card }}
+    </div>
+    <div>
+    {{#if follower}}
+        {{#if follower.error}}
+            {{> form-who }}
+        {{else}}
+            {{#if follower.subscribe}}
+                <p>Click below to follow them on {{{domain follower.subscribe}}}:</p>
+                <a class='follow-button' href='{{{follower.subscribe}}}'>Follow</a>
+            {{else}}
+                <p>Unfortunately, we couldn't find a subscribe url for you.</p>
+                <p> Please go to <a href='{{{origin follower.id}}}' target='_blank'>{{{domain follower.id}}}</a> directly
+                    and try searching for: <code>@{{{person.handle}}}</code> or <code>{{{person.id}}}</code>
+                </p>
+            {{/if}}
+        {{/if}}
+    {{else}}
+        {{> form-who }}
+    {{/if}}
+    </div>
+</main>
+<script>
+    document.querySelectorAll('code').forEach(el => el.addEventListener('click', ev => {
+        const selection = window.getSelection()
+        const range = document.createRange()
+
+        // Select all contents of the div
+        range.selectNodeContents(el)
+
+        // Clear existing selections and add the new range
+        selection.removeAllRanges()
+        selection.addRange(range)
+
+        const text = el.innerText
+        navigator.clipboard.writeText(text)
+            .then(() => console.log(`"${text}" copied to clipboard.`))
+            .catch(err => console.error('Failed to copy: ', err))
+    }))
+</script>

@@ -1,0 +1,14 @@
+<a class='inherit' href='{{{follower.url}}}' target='_blank'>
+  <section class='card follow'>
+    {{#if follower.avatar}}
+      <img src='{{follower.avatar}}' alt='@{{follower.handle}}'>
+    {{/if}}
+    <h2>{{follower.name}}</h2>
+    {{#if follower.handle}}
+      <h6>@{{follower.handle}}</h6>
+    {{/if}}
+    {{#if follower.id}}
+      <h6>({{follower.id}})</h6>
+    {{/if}}
+  </section>
+</a>
