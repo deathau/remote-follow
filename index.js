@@ -94,7 +94,7 @@ async function getAPData(url){
   const data = Object.entries(dataObj).map(([key, value]) => `${key}: ${value}`).join('\n')
   const signature = forge.util.encode64(key.sign(forge.md.sha256.create().update(data)))
   const signatureObj = {
-    keyId: `${baseUrl}#main-key`,
+    keyId: `${baseUrl}/actor#main-key`,
     headers: Object.keys(dataObj).join(' '),
     signature: signature
   }
@@ -104,9 +104,13 @@ async function getAPData(url){
     signature: Object.entries(signatureObj).map(([key,value]) => `${key}="${value}"`).join(','),
     accept: AP_HEADERS[0]
   }
+
+  // console.log("headers:", headers)
   
   const dataresult = await fetch(url, { headers })
-  return await dataresult.json()
+  let result = await dataresult.json()
+  if(result.error) result.respose = dataresult
+  return result
 }
 
 function getIdOrHandle(idOrHandle) {
@@ -175,118 +179,107 @@ async function buildPerson(idOrHandle) {
   return person
 }
 
-app.all(/^\/(.*)/, async (req, res) => {
-  try{
-    baseUrl = req.protocol + '://' + req.get('host')
-    console.log(new Date(), baseUrl + req.originalUrl, req.header('Accept'))
+app.get('/.well-known/webfinger', async (req, res) => {
+  baseUrl = req.protocol + '://' + req.get('host')
+    let fullUrl = new URL(baseUrl + req.originalUrl)
+    console.log(new Date(), fullUrl.toString(), req.header('Accept'))
+  if(!req.query?.resource) return res.status(404)
+  
+  let webfinger = {
+    subject: req.query.resource,
+    aliases: [baseUrl],
+    links:[
+      {
+        "rel":"self",
+        "href":`${baseUrl}/actor`,
+        "type":"application/activity+json"
+      },
+      {
+        "rel":"http://webfinger.net/rel/profile-page",
+        "href":baseUrl
+      },
+      {
+        "rel":SUBSCRIBE_LINK_REL,
+        "href":`${baseUrl}/{uri}`
+      }
+    ]
+  }
+  // console.log(webfinger)
+  return res.header('Content-Type','application/json').send(webfinger)
+})
 
-    if(req.originalUrl.startsWith('/.well-known/webfinger') && req.query?.resource){
-      req.query.resource
-      let webfinger = {
-        subject: req.query.resource,
-        aliases: [baseUrl],
-        links:[
-          {
-            "rel":"self",
-            "href":baseUrl,
-            "type":"application/activity+json"
-          },
-          {
-            "rel":"http://webfinger.net/rel/profile-page",
-            "href":baseUrl
-          },
-          {
-            "rel":SUBSCRIBE_LINK_REL,
-            "href":`${baseUrl}/{uri}`
-          }
-        ]
+app.get('/actor', async (req, res) => {
+  baseUrl = req.protocol + '://' + req.get('host')
+    let fullUrl = new URL(baseUrl + req.originalUrl)
+    console.log(new Date(), fullUrl.toString(), req.header('Accept'))
+  const key = forge.pki.publicKeyFromPem(process.env.PUBLIC_KEY)
+  let actor = {
+    "@context": [
+      "https://www.w3.org/ns/activitystreams",
+      "https://w3id.org/security/v1",
+      {
+          "toot": "http://joinmastodon.org/ns#",
+          "schema": "http://schema.org#",
+          "PropertyValue": "schema:PropertyValue",
+          "value": "schema:value",
+          "Ed25519Signature": "toot:Ed25519Signature",
+          "Ed25519Key": "toot:Ed25519Key",
+          "Curve25519Key": "toot:Curve25519Key",
+          "EncryptedMessage": "toot:EncryptedMessage",
+          "publicKeyBase64": "toot:publicKeyBase64"
       }
-      return res.header('Content-Type','application/json').send(webfinger)
+  ],
+    id: `${baseUrl}/actor`,
+    type: 'Application',
+    inbox: `${baseUrl}/actor/inbox`,
+    outbox: `${baseUrl}/actor/outbox`,
+    preferredUsername: 'RemoteFollow',
+    publicKey:{
+      id: `${baseUrl}/actor#main-key`,
+      owner: `${baseUrl}/actor`,
+      publicKeyPem: (forge.pki.publicKeyToPem(key)).replaceAll('\r\n', '\n')
+    },
+    name: 'Remote Follow'
+  }
+  // console.log(actor)
+  return res.header('Content-Type','application/activity+json').send(actor)
+})
+
+app.all('/actor/inbox', async (req, res) => res.status(401).send())
+app.all('/actor/outbox', async (req, res) => res.status(404).send())
+
+app.all(/(.*)/, async (req, res) => {
+  let param = req.url.substring(1) // remove the initial slash
+  baseUrl = req.protocol + '://' + req.get('host')
+  let fullUrl = new URL(baseUrl + req.originalUrl)
+  console.log(new Date(), fullUrl.toString(), req.header('Accept'))
+  try{
+    const person = req.body?.person ? JSON.parse(req.body.person) : await buildPerson(param)
+    let follower = req.session?.follower || null
+    if(req.body?.logout != null){
+      follower = null
+      req.session = null
     }
-    else if(req.header('Accept') && AP_HEADERS.some(h => req.header('Accept').includes(h))){
-      let actor = {
-        "@context": [
-          "https://www.w3.org/ns/activitystreams",
-          "https://w3id.org/security/v1",
-          {
-              "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
-              "toot": "http://joinmastodon.org/ns#",
-              "featured": {
-                  "@id": "toot:featured",
-                  "@type": "@id"
-              },
-              "featuredTags": {
-                  "@id": "toot:featuredTags",
-                  "@type": "@id"
-              },
-              "alsoKnownAs": {
-                  "@id": "as:alsoKnownAs",
-                  "@type": "@id"
-              },
-              "movedTo": {
-                  "@id": "as:movedTo",
-                  "@type": "@id"
-              },
-              "schema": "http://schema.org#",
-              "PropertyValue": "schema:PropertyValue",
-              "value": "schema:value",
-              "discoverable": "toot:discoverable",
-              "suspended": "toot:suspended",
-              "memorial": "toot:memorial",
-              "indexable": "toot:indexable",
-              "attributionDomains": {
-                  "@id": "toot:attributionDomains",
-                  "@type": "@id"
-              },
-              "focalPoint": {
-                  "@container": "@list",
-                  "@id": "toot:focalPoint"
-              }
-          }
-        ],
-        id: baseUrl,
-        type: 'Application',
-        "discoverable": true,
-        "indexable": false,
-        publicKey:{
-          id: `${baseUrl}#main-key`,
-          owner: baseUrl,
-          publicKeyPem: process.env.PUBLIC_KEY
-        },
-        name: 'Remote Follow',
-        preferredUsername: 'RemoteFollow',
-        url: baseUrl
+    else if(req.body?.idOrHandle){
+      try{
+        follower = await buildPerson(req.body.idOrHandle)
       }
-      return res.header('Content-Type','application/activity+json').send(actor)
-    }
-    else {
-      const person = req.body?.person ? JSON.parse(req.body.person) : await buildPerson(req.params[0])
-      let follower = req.session?.follower || null
-      if(req.body?.logout != null){
-        follower = null
-        req.session = null
-      }
-      else if(req.body?.idOrHandle){
-        try{
-          follower = await buildPerson(req.body.idOrHandle)
-        }
-        catch(e) {
-          follower = getIdOrHandle(req.body.idOrHandle)
-          follower.idOrHandle = req.body.idOrHandle
-          follower.error = e;
-        }
-        
-        if(!follower.error) req.session.follower = follower
+      catch(e) {
+        follower = getIdOrHandle(req.body.idOrHandle)
+        follower.idOrHandle = req.body.idOrHandle
+        follower.error = e;
       }
       
-      if(follower?.subscribe) follower.subscribe = follower.subscribe.toString().replace('{uri}', person.id.toString())
-      res.render('form', {person, follower})
+      if(!follower.error) req.session.follower = follower
     }
+    
+    if(follower?.subscribe) follower.subscribe = follower.subscribe.toString().replace('{uri}', person.id.toString())
+    res.render('form', {person, follower})
   }
   catch(e) {
     console.error(e)
     let person = {
-      idOrHandle: req.params[0],
+      idOrHandle: param,
       error: e
     }
     let follower = req.session?.follower || null
